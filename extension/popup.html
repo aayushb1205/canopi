@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>canopi</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <!-- ── Header (always visible) ──────────────── -->
+  <div class="hd">
+    <div class="hd-logo">✓</div>
+    <div class="hd-text">
+      <div class="hd-name">canopi</div>
+    </div>
+    <span class="hd-tag">EU</span>
+    <span class="hd-tag">US</span>
+  </div>
+
+  <!-- ── Initial state ────────────────────────── -->
+  <div id="v-init" class="view">
+    <div class="score-area">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52"/>
+          <circle class="ring-fg idle" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="ring-inner">
+          <div class="ring-icon">🔍</div>
+        </div>
+      </div>
+      <div class="score-label">Ready to scan</div>
+      <div class="score-sub">Checks against EU &amp; US green marketing rules</div>
+    </div>
+    <div class="act">
+      <button id="btn-go" class="btn-main">Scan this page</button>
+    </div>
+  </div>
+
+  <!-- ── Scanning state ───────────────────────── -->
+  <div id="v-scan" class="view" style="display:none">
+    <div class="score-area">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52"/>
+          <circle class="ring-fg scanning" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="ring-inner">
+          <div class="ring-icon pulse">⏳</div>
+        </div>
+      </div>
+      <div class="score-label">Scanning…</div>
+      <div class="score-sub">Checking environmental claims</div>
+    </div>
+  </div>
+
+  <!-- ── Consumer result view ─────────────────── -->
+  <div id="v-result" class="view" style="display:none">
+    <div class="score-area">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52"/>
+          <circle id="r-ring" class="ring-fg" cx="60" cy="60" r="52"
+            stroke-dasharray="0 327" />
+        </svg>
+        <div class="ring-inner">
+          <div id="r-num" class="ring-num">—</div>
+          <div class="ring-of">/100</div>
+        </div>
+      </div>
+      <div id="r-label" class="score-label"></div>
+      <div id="r-summary" class="score-summary"></div>
+    </div>
+
+    <!-- Pills -->
+    <div id="r-pills" class="pills"></div>
+
+    <!-- Brand context -->
+    <div id="r-brand" class="brand-ctx" style="display:none"></div>
+
+    <!-- Consumer claims -->
+    <div id="r-claims" class="claims"></div>
+
+    <!-- Clean-state certs -->
+    <div id="r-certs-clean" class="certs-clean" style="display:none"></div>
+
+    <!-- Detail toggle -->
+    <div class="detail-toggle">
+      <button id="btn-detail" class="btn-ghost">View full compliance report →</button>
+    </div>
+  </div>
+
+  <!-- ── B2B detail view ──────────────────────── -->
+  <div id="v-detail" class="view" style="display:none">
+    <div class="detail-hd">
+      <button id="btn-back" class="btn-back">←</button>
+      <div class="detail-hd-title">Compliance report</div>
+      <div id="d-url" class="detail-hd-url"></div>
+    </div>
+    <div id="d-claims" class="d-claims"></div>
+    <div id="d-certs" class="d-certs" style="display:none"></div>
+  </div>
+
+  <!-- ── Error state ──────────────────────────── -->
+  <div id="v-err" class="view" style="display:none">
+    <div class="score-area">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 120 120">
+          <circle class="ring-bg" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="ring-inner">
+          <div class="ring-icon">⚠</div>
+        </div>
+      </div>
+      <div class="score-label">Could not scan</div>
+      <div id="err-msg" class="score-sub"></div>
+    </div>
+    <div class="act">
+      <button id="btn-retry" class="btn-main">Try again</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
