@@ -625,7 +625,7 @@ footer a { color: var(--sage); text-decoration: none; }
   </div>
   <div class="callout" id="gw-callout" style="display:none;border-left-color:#C1121F">
     <div class="callout-title">Loading scan results…</div>
-    <p>Our automated scanner checked actual sustainability pages and product listings against 37 EU ECGT and FTC rules. These brands had claims that would be <strong>banned</strong> under the directive taking effect September 2026.</p>
+    <p>Our automated scanner checked actual sustainability pages and product listings against 37 EU ECGT and FTC rules. These brands had claims that would be <strong>non-compliant</strong> under the directive taking effect September 2026.</p>
     <div class="callout-brands"></div>
   </div>
 </section>
@@ -990,11 +990,13 @@ fetch(`${API_BASE}/api/stats/index?limit=300`)
           const violationCount = BRANDS.filter(b => b.scan_status === 'scanned' && (b.banned > 0 || b.restricted > 0)).length;
           const violationPct = scannedCount > 0 ? Math.round(violationCount / scannedCount * 100) : 0;
           el.querySelector('.callout-title').textContent =
-            `${violationPct}% of scanned brands have at least one violation (${violationCount} of ${scannedCount})`;
-          el.querySelector('.callout-brands').innerHTML = highRisk
-            .sort((a,b) => b.pages_banned_pct - a.pages_banned_pct)
+            `${violationPct}% of scanned brands have at least one flagged claim (${violationCount} of ${scannedCount})`;
+          const sorted = highRisk.sort((a,b) => b.pages_banned_pct - a.pages_banned_pct);
+          const top5 = sorted.slice(0, 5);
+          const remaining = sorted.length - 5;
+          el.querySelector('.callout-brands').innerHTML = top5
             .map(b => `<span class="callout-brand">${b.n} — ${b.pages_banned_pct}% of pages</span>`)
-            .join('');
+            .join('') + (remaining > 0 ? `<span class="callout-brand" style="background:transparent;border-color:transparent;color:var(--t3)">+ ${remaining} more in the explorer below</span>` : '');
         }
       }
 
