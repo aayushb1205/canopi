@@ -304,6 +304,18 @@ body {
   color: #F87171; white-space: nowrap;
 }
 
+/* Greenwash risk badges */
+.gw-badge {
+  font-family: var(--mono); font-size: 9px; padding: 2px 8px;
+  border-radius: 4px; white-space: nowrap; letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.gw-badge.high { background: rgba(193,18,31,0.15); color: #F87171; }
+.gw-badge.medium { background: rgba(182,141,64,0.15); color: #FCD34D; }
+.gw-badge.low { background: rgba(64,145,108,0.12); color: #86EFAC; }
+.gw-badge.none { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.25); }
+.gw-badge.pending { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.15); font-style: italic; }
+
 .brand-tier-badge {
   font-family: var(--mono); font-size: 10px; padding: 3px 9px;
   border-radius: 5px; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap;
@@ -543,6 +555,11 @@ footer a { color: var(--sage); text-decoration: none; }
       <span class="callout-brand">Patagonia — 90</span><span class="callout-brand">Asket — 85</span><span class="callout-brand">Nudie Jeans — 82</span><span class="callout-brand">VAUDE — 82</span><span class="callout-brand">Eileen Fisher — 80</span><span class="callout-brand">Rapanui — 80</span>
     </div>
   </div>
+  <div class="callout" id="gw-callout" style="display:none;border-left-color:#C1121F">
+    <div class="callout-title">Loading scan results…</div>
+    <p>Our automated scanner checked actual sustainability pages and product listings against 37 EU ECGT and FTC rules. These brands had claims that would be <strong>banned</strong> under the directive taking effect September 2026.</p>
+    <div class="callout-brands"></div>
+  </div>
 </section>
 
 <div class="explorer-wrap" id="explorer">
@@ -573,6 +590,11 @@ footer a { color: var(--sage); text-decoration: none; }
       <span class="filter-sep"></span>
       <button class="filter-btn" data-filter="issues">⚠ Issues</button>
       <button class="filter-btn" data-filter="bcorp">B Corp</button>
+      <span class="filter-sep"></span>
+      <span class="filter-group-label">Greenwash</span>
+      <button class="filter-btn" data-filter="gw:high">🔴 High Risk</button>
+      <button class="filter-btn" data-filter="gw:medium">🟡 Medium</button>
+      <button class="filter-btn" data-filter="gw:scanned">✓ Scanned</button>
     </div>
     <div class="results-count" id="results-count"></div>
     <div class="brand-grid" id="brand-grid"></div>
@@ -596,6 +618,8 @@ footer a { color: var(--sage); text-decoration: none; }
   <p>Our 37 scanning rules are based on the <strong>EU Directive 2024/825 (ECGT)</strong>, enforceable from September 27, 2026, and the <strong>FTC Green Guides (16 CFR Part 260)</strong>. Together these cover the most common forms of greenwashing in fashion marketing.</p>
   <h3>Limitations</h3>
   <p>This index evaluates brand-level transparency, not product-level claims. A high-scoring brand may still make problematic claims on individual pages. The index is one signal among many. Data is current as of February 2026 and will be updated monthly.</p>
+  <h3>Automated Greenwash Scanning</h3>
+  <p>In addition to transparency scoring, we run an automated scanner against each brand's sustainability pages and product listings. The scanner checks claims against 37 rules derived from the <strong>EU ECGT</strong> and <strong>FTC Green Guides</strong>, detecting banned generic claims ("eco-friendly", "sustainable"), unsubstantiated material claims ("recycled" without certification), vague future commitments, and offset-based claims. Results are shown as <strong>Greenwash Risk</strong> in the Brand Explorer above.</p>
 </section>
 
 <section class="cta-section">
@@ -632,6 +656,16 @@ const tierColorLight = t => ({leader:'#95D5B2',good:'#86EFAC',moderate:'#FCD34D'
 const tierLabel = t => ({leader:'Leader',good:'Good',moderate:'Moderate',low:'Low',very_low:'Very Low'}[t]||t);
 const catLabel = c => ({luxury:'Luxury',fast_fashion:'Fast Fashion',ultra_fast:'Ultra-Fast',sportswear:'Sportswear',sustainable:'Sustainable',retail:'Retail',mass_market:'Other'}[c]||c);
 
+// Greenwash helpers
+const gwLabel = r => ({high:'High Risk',medium:'Medium',low:'Low',none:'Clean',pending:'Pending'}[r]||r);
+function gwBadgeHtml(risk, banned) {
+  if (risk === 'pending') return '';
+  if (risk === 'none') return '';
+  const label = risk === 'high' ? `🔴 ${banned} banned` : risk === 'medium' ? '🟡 Restricted' : '';
+  if (!label) return '';
+  return ` <span class="gw-badge ${risk}">${label}</span>`;
+}
+
 let currentFilter = 'all';
 let currentSearch = '';
 let displayCount = 50;
@@ -642,6 +676,9 @@ function getFiltered() {
     if (currentFilter === 'all') return true;
     if (currentFilter === 'issues') return b.i.length > 0;
     if (currentFilter === 'bcorp') return b.bc;
+    if (currentFilter === 'gw:high') return b.greenwash_risk === 'high';
+    if (currentFilter === 'gw:medium') return b.greenwash_risk === 'medium';
+    if (currentFilter === 'gw:scanned') return b.scan_status === 'scanned';
     if (currentFilter.startsWith('cat:')) return b.cat === currentFilter.slice(4);
     return b.t === currentFilter;
   });
@@ -661,10 +698,11 @@ function renderBrands() {
     const certsHtml = b.c.slice(0, 3).map(c => `<span class="cert-pill">${c}</span>`).join('');
     const extra = b.c.length > 3 ? `<span class="cert-pill">+${b.c.length-3}</span>` : '';
     const name = b.n.replace(/'/g, '&#39;');
+    const gwBadge = b.greenwash_risk ? gwBadgeHtml(b.greenwash_risk, b.banned) : '';
     return `
       <div class="brand-row" onclick="toggleDetail('d${i}')">
         <div class="brand-score-ring"><svg viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="16"/><circle class="fg" cx="20" cy="20" r="16" stroke="${color}" stroke-dasharray="${dash} ${circ}"/></svg><div class="brand-score-num">${b.s}</div></div>
-        <div class="brand-info"><div class="brand-name">${b.n}</div><div class="brand-summary-text">${b.sm}</div></div>
+        <div class="brand-info"><div class="brand-name">${b.n}${gwBadge}</div><div class="brand-summary-text">${b.sm}</div></div>
         <div class="brand-certs">${certsHtml}${extra}</div>
         <span class="brand-tier-badge ${b.t}">${tierLabel(b.t)}</span>
       </div>
@@ -677,6 +715,13 @@ function renderBrands() {
           <div><div class="detail-item-label">SBTi</div><div class="detail-item-value">${b.sv?'<span class="detail-check">✓ Validated</span>':b.sb?'<span style="color:#FCD34D">⏳ Committed</span>':'<span class="detail-cross">✗</span>'}</div></div>
           <div><div class="detail-item-label">Supplier List</div><div class="detail-item-value">${b.sp?'<span class="detail-check">✓ Published</span>':'<span class="detail-cross">✗</span>'}</div></div>
           <div><div class="detail-item-label">Impact Report</div><div class="detail-item-value">${b.rp?'<span class="detail-check">✓ Published</span>':'<span class="detail-cross">✗</span>'}</div></div>
+          ${b.scan_status === 'scanned' ? `
+          <div><div class="detail-item-label">Greenwash Risk</div><div class="detail-item-value"><span class="gw-badge ${b.greenwash_risk}">${gwLabel(b.greenwash_risk)}</span></div></div>
+          <div><div class="detail-item-label">Banned Claims</div><div class="detail-item-value" style="font-family:var(--mono);${b.banned > 0 ? 'color:#F87171' : ''}">${b.banned}</div></div>
+          <div><div class="detail-item-label">Restricted Claims</div><div class="detail-item-value" style="font-family:var(--mono);${b.restricted > 0 ? 'color:#FCD34D' : ''}">${b.restricted}</div></div>
+          ${b.top_violation ? `<div><div class="detail-item-label">Top Violation</div><div class="detail-item-value" style="font-size:12px">${b.top_violation}</div></div>` : ''}
+          <div><div class="detail-item-label">Pages Scanned</div><div class="detail-item-value" style="font-family:var(--mono)">${b.pages_scanned}</div></div>
+          ` : `<div style="grid-column:1/-1"><div class="detail-item-label">Greenwash Scan</div><div class="detail-item-value" style="color:rgba(255,255,255,0.25);font-style:italic">Pending — scan not yet completed</div></div>`}
         </div>
         ${b.c.length?`<div style="margin-top:14px"><div class="detail-item-label">Certifications</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${b.c.map(c=>`<span class="cert-pill">${c}</span>`).join('')}</div></div>`:''}
         ${b.i.length?`<div style="margin-top:14px"><div class="detail-item-label">Known Issues</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${b.i.map(x=>`<span class="issue-pill">${x}</span>`).join('')}</div></div>`:''}
@@ -752,6 +797,49 @@ function copyEmbed() { navigator.clipboard.writeText(document.getElementById('em
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 
 renderBrands();
+
+// ── Fetch live scan data from API ──
+const API_BASE = 'https://greencheck-production.up.railway.app';
+fetch(`${API_BASE}/api/stats/index?limit=300`)
+  .then(r => r.json())
+  .then(resp => {
+    if (resp.data && resp.data.length > 0) {
+      const apiMap = {};
+      resp.data.forEach(b => { apiMap[b.id] = b; });
+
+      BRANDS.forEach(b => {
+        const api = apiMap[b.id];
+        if (api) {
+          b.scan_status = api.scan_status || 'pending';
+          b.total_scans = api.total_scans || 0;
+          b.pages_scanned = api.pages_scanned || 0;
+          b.banned = api.banned || 0;
+          b.restricted = api.restricted || 0;
+          b.greenwash_risk = api.greenwash_risk || 'pending';
+          b.top_violation = api.top_violation || '';
+        }
+      });
+
+      // Update greenwash callout
+      const highRisk = BRANDS.filter(b => b.greenwash_risk === 'high');
+      if (highRisk.length > 0) {
+        const el = document.getElementById('gw-callout');
+        if (el) {
+          el.style.display = 'block';
+          el.querySelector('.callout-title').textContent =
+            `${highRisk.length} brand${highRisk.length > 1 ? 's' : ''} making claims banned under EU ECGT`;
+          el.querySelector('.callout-brands').innerHTML = highRisk
+            .sort((a,b) => b.banned - a.banned)
+            .map(b => `<span class="callout-brand">${b.n} — ${b.banned} banned</span>`)
+            .join('');
+        }
+      }
+
+      renderBrands();
+      console.log(`[Canopi] Merged scan data for ${Object.keys(apiMap).length} brands`);
+    }
+  })
+  .catch(err => console.warn('[Canopi] API unavailable, using static data:', err));
 </script>
 </body>
 </html>
