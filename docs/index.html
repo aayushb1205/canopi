@@ -869,7 +869,7 @@ function showToast(m) { const t=document.getElementById('toast'); t.textContent=
 
 // Share: report
 const BASE_URL = 'https://getcanopi.eco';
-const REPORT_TXT = 'Not all green claims are created equal. The Canopi Eco Claims Index — how fashion brands' green claims measure against EU and FTC regulations.';
+const REPORT_TXT = 'Not all green claims are created equal. The Canopi Eco Claims Index scores fashion brands against EU and FTC regulations.';
 document.getElementById('share-x').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(REPORT_TXT)}&url=${encodeURIComponent(BASE_URL)}`;
 document.getElementById('share-li').href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(BASE_URL)}`;
 function copyLink() { navigator.clipboard.writeText(BASE_URL).then(()=>showToast('Link copied!')); }
