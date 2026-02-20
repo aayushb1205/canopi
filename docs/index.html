@@ -658,12 +658,12 @@ const catLabel = c => ({luxury:'Luxury',fast_fashion:'Fast Fashion',ultra_fast:'
 
 // Greenwash helpers
 const gwLabel = r => ({high:'High Risk',medium:'Medium',low:'Low',none:'Clean',pending:'Pending'}[r]||r);
-function gwBadgeHtml(risk, banned) {
-  if (risk === 'pending') return '';
-  if (risk === 'none') return '';
-  const label = risk === 'high' ? `🔴 ${banned} banned` : risk === 'medium' ? '🟡 Restricted' : '';
-  if (!label) return '';
-  return ` <span class="gw-badge ${risk}">${label}</span>`;
+function gwBadgeHtml(risk, pct) {
+  if (risk === 'pending' || risk === 'none') return '';
+  if (risk === 'high' && pct > 0) return ` <span class="gw-badge high">🔴 ${pct}% of pages</span>`;
+  if (risk === 'high') return ` <span class="gw-badge high">🔴 Banned claims</span>`;
+  if (risk === 'medium') return ` <span class="gw-badge medium">🟡 Restricted</span>`;
+  return '';
 }
 
 let currentFilter = 'all';
@@ -698,7 +698,7 @@ function renderBrands() {
     const certsHtml = b.c.slice(0, 3).map(c => `<span class="cert-pill">${c}</span>`).join('');
     const extra = b.c.length > 3 ? `<span class="cert-pill">+${b.c.length-3}</span>` : '';
     const name = b.n.replace(/'/g, '&#39;');
-    const gwBadge = b.greenwash_risk ? gwBadgeHtml(b.greenwash_risk, b.banned) : '';
+    const gwBadge = b.greenwash_risk ? gwBadgeHtml(b.greenwash_risk, b.pages_banned_pct) : '';
     return `
       <div class="brand-row" onclick="toggleDetail('d${i}')">
         <div class="brand-score-ring"><svg viewBox="0 0 40 40"><circle class="bg" cx="20" cy="20" r="16"/><circle class="fg" cx="20" cy="20" r="16" stroke="${color}" stroke-dasharray="${dash} ${circ}"/></svg><div class="brand-score-num">${b.s}</div></div>
@@ -717,10 +717,10 @@ function renderBrands() {
           <div><div class="detail-item-label">Impact Report</div><div class="detail-item-value">${b.rp?'<span class="detail-check">✓ Published</span>':'<span class="detail-cross">✗</span>'}</div></div>
           ${b.scan_status === 'scanned' ? `
           <div><div class="detail-item-label">Greenwash Risk</div><div class="detail-item-value"><span class="gw-badge ${b.greenwash_risk}">${gwLabel(b.greenwash_risk)}</span></div></div>
-          <div><div class="detail-item-label">Banned Claims</div><div class="detail-item-value" style="font-family:var(--mono);${b.banned > 0 ? 'color:#F87171' : ''}">${b.banned}</div></div>
+          <div><div class="detail-item-label">Banned Claims</div><div class="detail-item-value" style="font-family:var(--mono);${b.banned > 0 ? 'color:#F87171' : ''}">${b.banned}${b.pages_banned_pct > 0 ? ` <span style="font-size:10px;color:#F87171;opacity:0.7">(${b.pages_banned_pct}% of pages)</span>` : ''}</div></div>
           <div><div class="detail-item-label">Restricted Claims</div><div class="detail-item-value" style="font-family:var(--mono);${b.restricted > 0 ? 'color:#FCD34D' : ''}">${b.restricted}</div></div>
+          <div><div class="detail-item-label">Pages With Violations</div><div class="detail-item-value" style="font-family:var(--mono);${b.pages_claims_pct > 50 ? 'color:#FB923C' : ''}">${b.pages_claims_pct}%<span style="font-size:10px;color:rgba(255,255,255,0.3);margin-left:4px">of ${b.pages_scanned} pages</span></div></div>
           ${b.top_violation ? `<div><div class="detail-item-label">Top Violation</div><div class="detail-item-value" style="font-size:12px">${b.top_violation}</div></div>` : ''}
-          <div><div class="detail-item-label">Pages Scanned</div><div class="detail-item-value" style="font-family:var(--mono)">${b.pages_scanned}</div></div>
           ` : `<div style="grid-column:1/-1"><div class="detail-item-label">Greenwash Scan</div><div class="detail-item-value" style="color:rgba(255,255,255,0.25);font-style:italic">Pending — scan not yet completed</div></div>`}
         </div>
         ${b.c.length?`<div style="margin-top:14px"><div class="detail-item-label">Certifications</div><div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${b.c.map(c=>`<span class="cert-pill">${c}</span>`).join('')}</div></div>`:''}
@@ -815,6 +815,8 @@ fetch(`${API_BASE}/api/stats/index?limit=300`)
           b.pages_scanned = api.pages_scanned || 0;
           b.banned = api.banned || 0;
           b.restricted = api.restricted || 0;
+          b.pages_banned_pct = api.pages_banned_pct || 0;
+          b.pages_claims_pct = api.pages_claims_pct || 0;
           b.greenwash_risk = api.greenwash_risk || 'pending';
           b.top_violation = api.top_violation || '';
         }
@@ -826,11 +828,14 @@ fetch(`${API_BASE}/api/stats/index?limit=300`)
         const el = document.getElementById('gw-callout');
         if (el) {
           el.style.display = 'block';
+          const scannedCount = BRANDS.filter(b => b.scan_status === 'scanned').length;
+          const violationCount = BRANDS.filter(b => b.scan_status === 'scanned' && (b.banned > 0 || b.restricted > 0)).length;
+          const violationPct = scannedCount > 0 ? Math.round(violationCount / scannedCount * 100) : 0;
           el.querySelector('.callout-title').textContent =
-            `${highRisk.length} brand${highRisk.length > 1 ? 's' : ''} making claims banned under EU ECGT`;
+            `${violationPct}% of scanned brands have at least one violation (${violationCount} of ${scannedCount})`;
           el.querySelector('.callout-brands').innerHTML = highRisk
-            .sort((a,b) => b.banned - a.banned)
-            .map(b => `<span class="callout-brand">${b.n} — ${b.banned} banned</span>`)
+            .sort((a,b) => b.pages_banned_pct - a.pages_banned_pct)
+            .map(b => `<span class="callout-brand">${b.n} — ${b.pages_banned_pct}% of pages</span>`)
             .join('');
         }
       }
