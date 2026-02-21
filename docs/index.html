@@ -1007,8 +1007,6 @@ fetch(`${API_BASE}/api/stats/index?limit=300`)
             .join('') + (remaining > 0 ? `<span class="callout-brand" style="background:transparent;border-color:transparent;color:var(--t3)">+ ${remaining} more in the explorer below</span>` : '');
         }
       }
-        }
-      }
 
       renderBrands();
       console.log(`[Canopi] Merged scan data for ${Object.keys(apiMap).length} brands`);
