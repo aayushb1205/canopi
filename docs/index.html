@@ -8,7 +8,7 @@
 <meta property="og:title" content="canopi — The Eco Claims Index">
 <meta property="og:description" content="Not all green claims are created equal. We scored fashion brands' environmental claims against EU and US regulations.">
 <meta property="og:type" content="article">
-<meta property="og:url" content="https://getcanopi.eco">
+<meta property="og:url" content="https://claims.getcanopi.eco">
 <meta property="og:site_name" content="Canopi">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="The Canopi Eco Claims Index — February 2026">
@@ -885,7 +885,7 @@ if (days > 0) document.getElementById('countdown-text').textContent = `EU ECGT e
 function showToast(m) { const t=document.getElementById('toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),2200); }
 
 // Share: report
-const BASE_URL = 'https://getcanopi.eco';
+const BASE_URL = 'https://claims.getcanopi.eco';
 const REPORT_TXT = 'Not all green claims are created equal. The Canopi Eco Claims Index scores fashion brands against EU and FTC regulations.';
 document.getElementById('share-x').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(REPORT_TXT)}&url=${encodeURIComponent(BASE_URL)}`;
 document.getElementById('share-li').href = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(BASE_URL)}`;
@@ -915,8 +915,8 @@ function openEmbedModal(idx) {
     </div>
     ${certsHtml?`<div class="embed-preview-signals">${certsHtml}</div>`:''}
     <div style="font-size:13px;color:var(--t2);line-height:1.5;margin-bottom:10px">${b.sm}</div>
-    <div class="embed-preview-footer"><span>Canopi Eco Claims Index · Feb 2026</span><a href="${BASE_URL}">getcanopi.eco</a></div>`;
-  document.getElementById('embed-code').textContent = `<div style="background:#FAFAF8;border:1px solid #E8E6E1;border-radius:12px;padding:20px;max-width:400px;font-family:-apple-system,sans-serif;color:#1A1A1A"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="width:44px;height:44px;border-radius:50%;background:${color}18;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:${color}">${b.s}</div><div><div style="font-weight:600;font-size:15px">${b.n}</div><div style="font-size:11px;color:${color}">${tl} · ${b.s}/100</div></div></div><div style="font-size:12px;color:#5A5A5A;line-height:1.5;margin-bottom:12px">${b.sm}</div><div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid #E8E6E1;font-size:10px;color:#9B9B9B"><span>Canopi Eco Claims Index</span><a href="${BASE_URL}" style="color:#40916C;text-decoration:none">getcanopi.eco →</a></div></div>`;
+    <div class="embed-preview-footer"><span>Canopi Eco Claims Index · Feb 2026</span><a href="${BASE_URL}">claims.getcanopi.eco</a></div>`;
+  document.getElementById('embed-code').textContent = `<div style="background:#FAFAF8;border:1px solid #E8E6E1;border-radius:12px;padding:20px;max-width:400px;font-family:-apple-system,sans-serif;color:#1A1A1A"><div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="width:44px;height:44px;border-radius:50%;background:${color}18;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:${color}">${b.s}</div><div><div style="font-weight:600;font-size:15px">${b.n}</div><div style="font-size:11px;color:${color}">${tl} · ${b.s}/100</div></div></div><div style="font-size:12px;color:#5A5A5A;line-height:1.5;margin-bottom:12px">${b.sm}</div><div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1px solid #E8E6E1;font-size:10px;color:#9B9B9B"><span>Canopi Eco Claims Index</span><a href="${BASE_URL}" style="color:#40916C;text-decoration:none">claims.getcanopi.eco →</a></div></div>`;
   document.getElementById('embed-modal').classList.add('open');
 }
 function closeModal() { document.getElementById('embed-modal').classList.remove('open'); }
